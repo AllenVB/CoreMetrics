@@ -1,5 +1,11 @@
+# Visual Studio gereksizleri
 .vs/
 [Oo]bj/
 [Bb]in/
-.user
-.suo
+*.user
+*.suo
+*.shellconfig
+
+# Dosya sistemi gereksizleri
+.DS_Store
+Thumbs.db
