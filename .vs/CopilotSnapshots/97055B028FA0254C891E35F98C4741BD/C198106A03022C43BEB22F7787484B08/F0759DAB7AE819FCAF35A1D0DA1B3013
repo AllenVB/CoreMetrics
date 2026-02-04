@@ -1,0 +1,87 @@
+﻿using Microsoft.EntityFrameworkCore;
+using SimpleAnalytics.Api.Data;
+using SimpleAnalytics.Api.Models;
+
+namespace SimpleAnalytics.Api.Services
+{
+    public class AnalyticsService : IAnalyticsService
+    {
+        private readonly AppDbContext _context;
+
+        public AnalyticsService(AppDbContext context)
+        {
+            _context = context;
+        }
+
+        // GÖREV 1: Bir ziyareti PostgreSQL'e kaydetmek
+        public async Task<bool> TrackVisit(Visit visit)
+        {
+            try
+            {
+                await _context.Visits.AddAsync(visit);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        // GÖREV 2: Yeni bir web sitesi kaydetmek ve ApiKey üretmek
+        public async Task<Website> RegisterWebsite(string name, string domain)
+        {
+            var website = new Website
+            {
+                Name = name,
+                Domain = domain,
+                ApiKey = Guid.NewGuid().ToString() // Benzersiz bir anahtar üretir
+            };
+
+            _context.Websites.Add(website);
+            await _context.SaveChangesAsync();
+            return website;
+        }
+
+        // GÖREV 3: ApiKey kullanarak siteyi doğrulamak
+        public async Task<Website?> GetWebsiteByApiKey(string apiKey)
+        {
+            return await _context.Websites
+                .FirstOrDefaultAsync(w => w.ApiKey == apiKey);
+        }
+
+        // GÖREV 4: Ham istatistikleri çekmek
+        public async Task<List<Visit>> GetStats(int websiteId)
+        {
+            return await _context.Visits
+                .Where(v => v.WebsiteId == websiteId)
+                .OrderByDescending(v => v.CreatedAt)
+                .ToListAsync();
+        }
+
+        // YENİ GÖREV (EKLEMEN GEREKEN): Dashboard için özet istatistikler
+        public async Task<object> GetWebsiteSummary(string apiKey)
+        {
+            var website = await GetWebsiteByApiKey(apiKey);
+            if (website == null) return null;
+
+            var totalVisits = await _context.Visits.CountAsync(v => v.WebsiteId == website.Id);
+
+            // En çok ziyaret edilen 5 sayfayı gruplayıp sayıyoruz
+            var topPages = await _context.Visits
+                .Where(v => v.WebsiteId == website.Id)
+                .GroupBy(v => v.Path)
+                .Select(g => new { Path = g.Key, Count = g.Count() })
+                .OrderByDescending(x => x.Count)
+                .Take(5)
+                .ToListAsync();
+
+            return new
+            {
+                WebsiteName = website.Name,
+                TotalVisits = totalVisits,
+                TopPages = topPages
+            };
+        }
+    }
+}

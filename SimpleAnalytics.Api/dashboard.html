@@ -1,0 +1,269 @@
+﻿<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>CoreMetrics</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; }
+        .glass { backdrop-filter: blur(6px); background-color: rgba(255,255,255,0.02); }
+        .animate-pulse-fast { animation: pulse 1s cubic-bezier(.4,0,.6,1) infinite; }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen">
+    <header class="max-w-6xl mx-auto p-6 flex items-center justify-between">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-lg flex items-center justify-center bg-gradient-to-br from-blue-500 to-indigo-500 shadow-lg">📈</div>
+            <div>
+                <h1 class="text-2xl font-semibold text-white">CoreMetrics</h1>
+                <p class="text-slate-400 text-sm">Canlı panel — hızlı durum değerlendirmesi</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-3">
+            <input id="apiKeyInput" placeholder="API Key (Site seçimi)" class="px-3 py-2 rounded-lg bg-slate-800/60 border border-slate-700 text-sm w-64" />
+            <button id="refreshBtn" class="px-4 py-2 bg-slate-800/60 border border-slate-700 rounded-lg hover:bg-slate-800 transition">Yenile</button>
+            <button id="copyKey" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-white">API Key'i Kopyala</button>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto p-6">
+        <section class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            <div class="glass p-6 rounded-2xl border border-slate-700">
+                <p class="text-slate-400 text-sm">Web Sitesi</p>
+                <h2 id="siteName" class="text-xl font-semibold text-white">Yükleniyor...</h2>
+                <p id="lastUpdated" class="text-slate-400 text-xs mt-2">—</p>
+            </div>
+
+            <div class="glass p-6 rounded-2xl border border-slate-700">
+                <p class="text-slate-400 text-sm">Toplam Ziyaret</p>
+                <h2 id="totalVisits" class="text-3xl font-bold text-green-400">0</h2>
+                <p class="text-slate-400 text-xs mt-2">Son 5 saniyede otomatik güncelleme</p>
+            </div>
+
+            <div class="glass p-6 rounded-2xl border border-slate-700">
+                <p class="text-slate-400 text-sm">Benzersiz Sayfalar</p>
+                <h2 id="uniquePages" class="text-3xl font-bold text-blue-300">0</h2>
+                <p class="text-slate-400 text-xs mt-2">En çok ziyaret edilen sayfalar listelenir</p>
+            </div>
+        </section>
+
+        <section class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div class="glass p-6 rounded-2xl border border-slate-700
+            h-[320px] max-h-[320px] overflow-hidden flex flex-col">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-sm text-slate-400">En Çok Ziyaret Edilen Sayfalar</h3>
+                    <span id="chartCount" class="text-xs text-slate-400">0 öğe</span>
+                </div>
+                <div class="flex-1 min-h-0">
+                    <canvas id="pagesChart" class="!h-full !w-full"></canvas>
+                </div>            </div>
+
+            <div class="glass p-6 rounded-2xl border border-slate-700 overflow-hidden">
+                <h3 class="text-sm text-slate-400 mb-4">Sayfa Dağılımı</h3>
+                <div class="overflow-auto max-h-64">
+                    <table class="w-full table-auto text-sm">
+                        <thead class="text-slate-400 text-xs sticky top-0 bg-slate-900/40">
+                            <tr>
+                                <th class="py-2 text-left pl-2">Sayfa</th>
+                                <th class="py-2 text-right pr-2">Ziyaret</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pagesTableBody" class="divide-y divide-slate-800">
+                            <tr><td class="p-4 text-slate-500">Yükleniyor...</td><td class="p-4 text-right text-slate-500">—</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <footer class="text-center text-slate-500 text-xs mt-6 flex items-center justify-center gap-4">
+            <div>SimpleAnalytics · Hafif, hızlı ve güvenli</div>
+            <a id="howtoLink" class="text-indigo-400 hover:underline cursor-pointer">Kurulum ve API Bağlama</a>
+        </footer>
+    </main>
+
+    <!-- Modal: Kurulum ve API talimatları -->
+    <div id="howtoModal" class="fixed inset-0 hidden items-center justify-center z-50">
+        <div class="absolute inset-0 bg-black/60" id="modalBackdrop"></div>
+        <div class="relative max-w-3xl w-full mx-4 glass rounded-2xl border border-slate-700 p-6 z-10">
+            <div class="flex items-start justify-between">
+                <h2 class="text-lg font-semibold">Kurulum & API Bağlama</h2>
+                <button id="closeModal" class="text-slate-300">Kapat ✕</button>
+            </div>
+
+            <div class="mt-4 text-sm text-slate-300 space-y-3">
+                <p>1) Site kaydı: Yeni sitenizi kaydetmek için aşağıdaki örnek isteği gönderin. Cevapta size <code class="bg-slate-800 px-1 rounded">ApiKey</code> dönecektir.</p>
+                <pre class="bg-slate-800 p-3 rounded text-xs overflow-auto">curl -X POST "${NGROK_URL || 'https://your-server'}"/api/Website -H "Content-Type: application/json" -d '{"name":"Blogum","domain":"blogum.com"}'</pre>
+
+                <p>2) İzleme kodu: Aşağıdaki küçük JavaScript kodunu kendi sitenizin global bölümüne (ör: <code>&lt;head&gt;</code>) ekleyin. Buradaki <code>API_KEY</code> değerini kayıt cevabından alın ve panoya yapıştırın.</p>
+                <pre class="bg-slate-800 p-3 rounded text-xs overflow-auto">&lt;script&gt;
+(function(){
+  const API_KEY = 'YOUR_API_KEY_HERE';
+  function track(path){
+    fetch('" + NGROK_URL + "' + '/api/collector/track', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ apiKey: API_KEY, path: path || location.pathname, referrer: document.referrer, userAgent: navigator.userAgent })
+    }).catch(()=>{});
+  }
+  // Sayfa yüklenince takip gönder
+  track();
+  // Örnek: SPA route değişikliklerinde çağırabilirsiniz
+  window.sa_track = track;
+})();
+&lt;/script&gt;</pre>
+
+                <p>3) Dashboard'a bağlama: Sitelerinizi ayırt etmek için dashboard'ta sağ üstteki <em>API Key (Site seçimi)</em> alanına ilgili API Key'i yapıştırın ve 'Yenile'ye tıklayın. Dashboard bu anahtara göre verileri getirip grafik oluşturacaktır.</p>
+
+                <p>Notlar:</p>
+                <ul class="list-disc list-inside text-slate-400">
+                    <li>Gizli anahtarınızı güvenli tutun; istemci tarafında anonim veriler gönderiliyorsa bile anahtarın paylaşılmaması önerilir.</li>
+                    <li>Server adresini (NGROK_URL) kendi sunucu adresinizle değiştirin.</li>
+                    <li>API istekleri CORS ile korunuyorsa, kendi domaininizi izin verilenler listesine ekleyin.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sunucu URL (ngrok vb.)
+        const NGROK_URL = "https://collen-unlyrical-retributively.ngrok-free.dev";
+
+        // API Key yönetimi: localStorage ile sakla ve input'tan al
+        const apiKeyInput = document.getElementById('apiKeyInput');
+        const savedKey = localStorage.getItem('sa_api_key') || '';
+        apiKeyInput.value = savedKey;
+
+        const headersBase = { "ngrok-skip-browser-warning": "69420" };
+
+        let pagesChart = null;
+
+        async function loadDashboard() {
+            const apiKey = apiKeyInput.value.trim();
+            if (!apiKey) {
+                document.getElementById('siteName').innerText = 'API Key girin';
+                return;
+            }
+
+            try {
+                const resp = await fetch(`${NGROK_URL}/api/Dashboard/summary/${apiKey}`, { headers: headersBase });
+                if (!resp.ok) throw new Error(`Sunucu hatası: ${resp.status}`);
+
+                const data = await resp.json();
+
+                const websiteName = data.websiteName || data.WebsiteName || '—';
+                const totalVisits = data.totalVisits || data.TotalVisits || 0;
+                const pages = data.topPages || data.TopPages || [];
+
+                document.getElementById('siteName').innerText = websiteName;
+                document.getElementById('totalVisits').innerText = totalVisits;
+                document.getElementById('uniquePages').innerText = pages.length;
+                document.getElementById('chartCount').innerText = `${pages.length} öğe`;
+                document.getElementById('lastUpdated').innerText = new Date().toLocaleString();
+
+                // Table
+                const tbody = document.getElementById('pagesTableBody');
+                if (pages.length === 0) {
+                    tbody.innerHTML = `<tr><td class="p-4 text-slate-500">Veri yok</td><td class="p-4 text-right text-slate-500">0</td></tr>`;
+                } else {
+                    tbody.innerHTML = pages.map(p => `
+                        <tr class="hover:bg-slate-800/50">
+                            <td class="p-4 pl-2 font-mono text-blue-300">${escapeHtml(p.path || p.Path)}</td>
+                            <td class="p-4 pr-2 text-right font-semibold">${p.count || p.Count}</td>
+                        </tr>
+                    `).join('');
+                }
+
+                // Chart
+                const labels = pages.map(p => p.path || p.Path || '/');
+                const values = pages.map(p => p.count || p.Count || 0);
+
+                const ctx = document.getElementById('pagesChart').getContext('2d');
+                if (!pagesChart) {
+                    pagesChart = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels,
+                            datasets: [{
+                                label: 'Ziyaret',
+                                data: values,
+                                backgroundColor: labels.map(() => 'rgba(99,102,241,0.75)'),
+                                borderRadius: 6,
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                x: { ticks: { color: '#94a3b8' } },
+                                y: { ticks: { color: '#94a3b8' }, beginAtZero: true }
+                            },
+                            plugins: { legend: { display: false } }
+                        }
+                    });
+                } else {
+                    pagesChart.data.labels = labels;
+                    pagesChart.data.datasets[0].data = values;
+                    pagesChart.update();
+                }
+
+                // Kaydet: başarılı yükleme sonrası API Key'i localStorage'a yaz
+                localStorage.setItem('sa_api_key', apiKey);
+
+            } catch (err) {
+                console.error('Hata:', err);
+                document.getElementById('siteName').innerText = 'Hata alındı';
+                document.getElementById('totalVisits').innerText = '—';
+            }
+        }
+
+        function escapeHtml(unsafe) {
+            if (!unsafe) return '';
+            return String(unsafe)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        // Butonlar
+        document.getElementById('refreshBtn').addEventListener('click', () => {
+            const btn = document.getElementById('refreshBtn');
+            btn.classList.add('animate-pulse-fast');
+            loadDashboard().finally(() => btn.classList.remove('animate-pulse-fast'));
+        });
+
+        document.getElementById('copyKey').addEventListener('click', async () => {
+            const key = apiKeyInput.value.trim();
+            if (!key) return alert('Önce API Key girin.');
+            try {
+                await navigator.clipboard.writeText(key);
+                const btn = document.getElementById('copyKey');
+                const original = btn.innerText;
+                btn.innerText = 'Kopyalandı ✓';
+                setTimeout(() => btn.innerText = original, 1500);
+            } catch {
+                alert('API Key kopyalanamadı.');
+            }
+        });
+
+        // Modal open/close
+        const howtoLink = document.getElementById('howtoLink');
+        const howtoModal = document.getElementById('howtoModal');
+        const modalBackdrop = document.getElementById('modalBackdrop');
+        document.getElementById('closeModal').addEventListener('click', () => howtoModal.classList.add('hidden'));
+        howtoLink.addEventListener('click', () => howtoModal.classList.remove('hidden'));
+        modalBackdrop.addEventListener('click', () => howtoModal.classList.add('hidden'));
+
+        // İlk yükleme ve düzenli yenileme (eğer kaydedilmişse)
+        if (savedKey) loadDashboard();
+        setInterval(loadDashboard, 5000);
+    </script>
+</body>
+</html>

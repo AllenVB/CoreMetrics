@@ -1,0 +1,72 @@
+﻿<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>SaaS Analytics Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-white p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold mb-8 border-b border-slate-700 pb-4 text-blue-400">📊 Canlı Analiz Paneli</h1>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div class="bg-slate-800 p-6 rounded-xl border border-slate-700">
+                <p class="text-slate-400 text-sm">Web Sitesi</p>
+                <h2 id="siteName" class="text-2xl font-bold">Yükleniyor...</h2>
+            </div>
+            <div class="bg-slate-800 p-6 rounded-xl border border-slate-700">
+                <p class="text-slate-400 text-sm">Toplam Ziyaret</p>
+                <h2 id="totalVisits" class="text-4xl font-bold text-green-400">0</h2>
+            </div>
+        </div>
+
+        <div class="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden">
+            <table class="w-full text-left">
+                <thead class="bg-slate-900/50 text-slate-400 text-sm">
+                    <tr>
+                        <th class="p-4">Sayfa Yolu</th>
+                        <th class="p-4 text-right">Ziyaret</th>
+                    </tr>
+                </thead>
+                <tbody id="pagesTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Kendi güncel bilgilerini buraya yapıştır
+        const API_KEY = "745fc94c-ab14-4ed2-beb2-db4a32c990a5";
+        const NGROK_URL = "https://collen-unlyrical-retributively.ngrok-free.dev";
+
+        async function loadDashboard() {
+            try {
+                const response = await fetch(`${NGROK_URL}/api/Dashboard/summary/${API_KEY}`, {
+                    headers: {
+                        "ngrok-skip-browser-warning": "69420"
+                    }
+                });
+
+                const data = await response.json();
+
+                // Hem küçük harf hem büyük harf json keylerini destekler
+                document.getElementById('siteName').innerText = data.websiteName || data.WebsiteName;
+                document.getElementById('totalVisits').innerText = data.totalVisits || data.TotalVisits;
+
+                const pages = data.topPages || data.TopPages || [];
+                document.getElementById('pagesTableBody').innerHTML = pages.map(p => `
+                        <tr class="border-b border-slate-700">
+                            <td class="p-4 font-mono text-blue-300">${p.path || p.Path}</td>
+                            <td class="p-4 text-right font-bold">${p.count || p.Count}</td>
+                        </tr>
+                    `).join('');
+
+            } catch (err) {
+                console.error("Hata:", err);
+            }
+        }
+
+        loadDashboard();
+        setInterval(loadDashboard, 5000); // 5 saniyede bir otomatik yenile
+    </script>
+</body>
+</html>

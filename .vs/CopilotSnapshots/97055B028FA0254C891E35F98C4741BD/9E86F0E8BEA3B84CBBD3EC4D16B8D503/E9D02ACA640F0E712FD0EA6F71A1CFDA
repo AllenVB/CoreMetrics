@@ -1,0 +1,175 @@
+﻿<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>SimpleAnalytics — Minimal Dashboard</title>
+    <!-- Minimal styling, avoid heavy external fonts -->
+    <style>
+        :root{--bg:#0f1724;--card:#0b1220;--muted:#9ca3af;--accent:#6366f1;--accent-2:#7c3aed}
+        html,body{height:100%;margin:0;background:var(--bg);color:#e6eef8;font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial}
+        .container{max-width:980px;margin:20px auto;padding:16px}
+        header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+        .brand{display:flex;gap:12px;align-items:center}
+        .logo{width:40px;height:40px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;font-weight:700}
+        .controls{display:flex;gap:8px;align-items:center}
+        input[type=text]{background:var(--card);border:1px solid #122032;padding:8px;border-radius:8px;color:inherit}
+        button{background:var(--accent);border:none;color:white;padding:8px 10px;border-radius:8px;cursor:pointer}
+        .grid{display:grid;grid-template-columns:1fr 220px;gap:12px}
+        .card{background:var(--card);border-radius:10px;padding:12px;border:1px solid #121826}
+        .small{color:var(--muted);font-size:13px}
+        #chartWrapper{height:240px}
+        canvas{width:100% !important;height:100% !important;display:block}
+        table{width:100%;border-collapse:collapse;font-size:13px}
+        td,th{padding:8px}
+        tbody tr:nth-child(odd){background:rgba(255,255,255,0.01)}
+        .muted{color:var(--muted)}
+        footer{margin-top:14px;text-align:center;color:var(--muted);font-size:13px}
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js" integrity="" crossorigin="anonymous"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="brand">
+                <div class="logo">SA</div>
+                <div>
+                    <div style="font-weight:600">SimpleAnalytics</div>
+                    <div class="small muted">Minimal Dashboard</div>
+                </div>
+            </div>
+
+            <div class="controls">
+                <input id="apiKeyInput" type="text" placeholder="API Key" />
+                <button id="refreshBtn">Yenile</button>
+            </div>
+        </header>
+
+        <main class="grid">
+            <div>
+                <div class="card" style="margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
+                    <div>
+                        <div class="small muted">Site</div>
+                        <div id="siteName" style="font-weight:600">—</div>
+                    </div>
+                    <div style="text-align:right">
+                        <div class="small muted">Toplam</div>
+                        <div id="totalVisits" style="font-weight:700">0</div>
+                    </div>
+                </div>
+
+                <div class="card" id="chartCard">
+                    <div class="small muted" style="margin-bottom:6px;display:flex;justify-content:space-between"><span>En çok ziyaret edilenler</span><span id="chartCount" class="muted">0</span></div>
+                    <div id="chartWrapper"><canvas id="pagesChart"></canvas></div>
+                </div>
+            </div>
+
+            <div>
+                <div class="card">
+                    <div class="small muted">Son Kayıtlar</div>
+                    <div style="max-height:320px;overflow:auto;margin-top:8px">
+                        <table>
+                            <thead><tr><th>Sayfa</th><th style="text-align:right">Ziyaret</th></tr></thead>
+                            <tbody id="pagesTableBody"><tr><td colspan="2" class="muted">Yükleniyor...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="muted">Auto-refresh: <span id="autoStatus">pasif</span> · Poll interval: <span id="pollInterval">10s</span></footer>
+    </div>
+
+    <script>
+        // Ayarlar: uygulama URL'nizi buraya koyun
+        const SERVER = window.SERVER_URL || 'http://localhost:5000';
+        const POLL_MS = 10000; // 10s polling (daha az sık update ile performans iyileşir)
+        let autoRefresh = true;
+
+        const apiKeyInput = document.getElementById('apiKeyInput');
+        apiKeyInput.value = localStorage.getItem('sa_api_key') || '';
+
+        document.getElementById('pollInterval').innerText = (POLL_MS/1000)+'s';
+        document.getElementById('autoStatus').innerText = autoRefresh ? 'aktif' : 'pasif';
+
+        let pagesChart = null;
+        let pollTimer = null;
+
+        function escapeHtml(unsafe){ if(!unsafe) return ''; return String(unsafe).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;'); }
+
+        async function loadDashboard(){
+            const apiKey = apiKeyInput.value.trim();
+            if(!apiKey) { document.getElementById('siteName').innerText='API Key girin'; return; }
+
+            try{
+                const resp = await fetch(`${SERVER}/api/Dashboard/summary/${apiKey}`);
+                if(!resp.ok) throw new Error('Sunucu hatası '+resp.status);
+                const data = await resp.json();
+
+                const websiteName = data.websiteName || data.WebsiteName || '—';
+                const totalVisits = data.totalVisits || data.TotalVisits || 0;
+                const pages = (data.topPages || data.TopPages || []).slice(0,10); // limit 10
+
+                document.getElementById('siteName').innerText = websiteName;
+                document.getElementById('totalVisits').innerText = totalVisits;
+                document.getElementById('chartCount').innerText = pages.length;
+
+                // Table (replace entire tbody to avoid layout thrash)
+                const tbody = document.getElementById('pagesTableBody');
+                if(pages.length===0){ tbody.innerHTML = '<tr><td colspan="2" class="muted">Veri yok</td></tr>'; }
+                else {
+                    const rows = pages.map(p => `<tr><td>${escapeHtml(p.path||p.Path)}</td><td style="text-align:right">${p.count||p.Count}</td></tr>`).join('');
+                    tbody.innerHTML = rows;
+                }
+
+                // Chart update (create once, then update data only)
+                const labels = pages.map(p => p.path || p.Path || '/');
+                const values = pages.map(p => p.count || p.Count || 0);
+
+                const ctx = document.getElementById('pagesChart').getContext('2d');
+                if(!pagesChart){
+                    pagesChart = new Chart(ctx, {
+                        type: 'bar',
+                        data: { labels, datasets: [{ label:'Ziyaret', data: values, backgroundColor: 'rgba(99,102,241,0.9)', borderRadius:4 }] },
+                        options: {
+                            responsive:true,
+                            maintainAspectRatio:false,
+                            animation: { duration: 200 },
+                            scales: {
+                                x: { ticks:{ color:'#94a3b8', maxRotation:0, minRotation:0, autoSkip:true } },
+                                y: { ticks:{ color:'#94a3b8' }, beginAtZero:true }
+                            },
+                            plugins: { legend:{ display:false } },
+                            layout: { padding: { top:6, bottom:6 } }
+                        }
+                    });
+                } else {
+                    // Update without resizing the canvas element
+                    pagesChart.data.labels = labels;
+                    pagesChart.data.datasets[0].data = values;
+                    pagesChart.update('active');
+                }
+
+                // on success store key
+                localStorage.setItem('sa_api_key', apiKey);
+
+            }catch(err){
+                console.error(err);
+                document.getElementById('siteName').innerText='Hata';
+            }
+        }
+
+        document.getElementById('refreshBtn').addEventListener('click', () => loadDashboard());
+
+        // Auto poll
+        function startPoll(){ if(pollTimer) clearInterval(pollTimer); pollTimer = setInterval(()=>{ if(autoRefresh) loadDashboard(); }, POLL_MS); }
+        startPoll();
+
+        // initial
+        if(apiKeyInput.value) loadDashboard();
+
+        // allow toggling auto refresh via double-click on footer
+        document.querySelector('footer').addEventListener('dblclick', ()=>{ autoRefresh = !autoRefresh; document.getElementById('autoStatus').innerText = autoRefresh ? 'aktif' : 'pasif'; });
+    </script>
+</body>
+</html>
