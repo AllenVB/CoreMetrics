@@ -2,7 +2,6 @@
 
 CoreMetrics, web sitelerinin ziyaretçi metriklerini **gerçek zamanlı (Real-time)** olarak izlemek, oturum sürelerini takip etmek, sayfa tıklamalarını analiz etmek ve kullanıcıların lokasyon verilerini toplamak için geliştirilmiş **sunucusuz (Serverless)** bir analitik platformudur. Google Analytics gibi ağır ve hantal sistemlerin aksine, hızlı, güvenli ve tamamen geliştirici kontrollüdür.
 
-![CoreMetrics Dashboard](https://allenvb.websayfasi.vercel.app/dashboard.html) 
 
 ---<img width="1919" height="974" alt="core1" src="https://github.com/user-attachments/assets/ca31a3a5-96fd-4a31-9973-249b8eb9a257" />
 
