@@ -1,38 +1,107 @@
-📊 CoreMetrics: SaaS Analytics Dashboard
-CoreMetrics, web siteleri için geliştirilmiş, hafif (lightweight) ve gerçek zamanlı bir ziyaretçi takip sistemidir. Bu proje, bir SaaS (Software as a Service) modeli olarak kurgulanmış olup, birden fazla web sitesinden gelen verileri merkezi bir panelde analiz etmeyi sağlar.
+# 📊 CoreMetrics - Gerçek Zamanlı Analitik ve Ziyaretçi Takip Sistemi
 
-🚀 Öne Çıkan Özellikler
-Gerçek Zamanlı Veri Akışı: Vercel üzerinde yayında olan sitelerden gelen verileri Ngrok tüneli üzerinden anlık olarak yakalar ve işler.
+CoreMetrics, web sitelerinin ziyaretçi metriklerini **gerçek zamanlı (Real-time)** olarak izlemek, oturum sürelerini takip etmek, sayfa tıklamalarını analiz etmek ve kullanıcıların lokasyon verilerini toplamak için geliştirilmiş **sunucusuz (Serverless)** bir analitik platformudur. Google Analytics gibi ağır ve hantal sistemlerin aksine, hızlı, güvenli ve tamamen geliştirici kontrollüdür.
 
-Multi-Tenant Yapı: Farklı web sitelerini ApiKey tabanlı yetkilendirme ile birbirinden ayırır.
+![CoreMetrics Dashboard](https://allenvb.websayfasi.vercel.app/dashboard.html) 
 
-Detaylı Analiz: Toplam ziyaret, benzersiz sayfa görüntülemeleri ve sayfa bazlı dağılımı görsel grafiklerle sunar.
+---
 
-Güvenlik: API seviyesinde Unauthorized (401) kontrolü ve CORS politikalarıyla veri güvenliğini sağlar.
+## 🔥 Temel Özellikler
 
-🛠️ Teknik Mimari ve Teknoloji Yığını
-Bu proje, modern yazılım mimarisi prensipleri ve Yazılım Mühendisliği 2025-2026 müfredatı kapsamında öğrenilen teorik bilgilerin pratik uygulamasıdır:
+- **Gerçek Zamanlı Veri Akışı:** Ziyaretçi istatistiklerini websocket yerine HTTP tabanlı modern **SSE (Server-Sent Events)** teknolojisi ile anlık ve kesintisiz sunar.
+- **Güvenli Oturum Takibi:** Kullanıcı sekmeyi veya tarayıcıyı kapatsa bile `navigator.sendBeacon()` API'si kullanılarak oturum süresi sunucuya %100 oranında iletilir.
+- **Lokasyon Analizi:** IP adresleri üzerinden ziyaretçilerin ülke ve şehir bilgilerini haritalandırır.
+- **API Key Koruması:** Frontend dashboard üzerinde API key güvenlik katmanı bulundurarak yetkisiz erişimleri engeller. Güvenli `localStorage` yönetimi sunar.
+- **Serverless Mimari:** Frankfurt lokasyonlu **Google Cloud Run** üzerinde konumlandırılmış, otomatik ölçeklenebilir (auto-scaling) backend yapısına sahiptir.
 
-Backend: C#, .NET 8 Web API ve Entity Framework Core.
+---
 
-Frontend: HTML5, Tailwind CSS, JavaScript (ES6+) ve veri görselleştirme için Chart.js.
+## 🛠️ Kullanılan Teknolojiler
 
-Veritabanı: PostgreSQL. Veriler, 2.NF ve 3.NF normalizasyon kurallarına uygun olarak modellenmiştir.
+### Backend
+* **C# / .NET Core**
+* **Google Cloud Run** (Serverless Deployment)
+* **PostgreSQL** (Veritabanı)
 
-DevOps: Ngrok (Local-to-Web Tunneling) ve Vercel (Cloud Deployment).
+### Frontend (Dashboard)
+* **Vanilla JavaScript**
+* **HTML5 / CSS3**
+* **Tailwind CSS** (Modern UI tasarımı ve Cam efekti - Glassmorphism)
+* **Three.js** (Arka plan 3D animasyonları)
+* **Chart.js** (Grafikleştirme)
 
-📖 Öğrenim Çıktıları
-Geliştirme süreci boyunca aşağıdaki konularda deneyim kazanılmıştır:
+---
 
-Yazılım Tasarımı ve Mimarisi: Katmanlı mimari (Layered Architecture) ve servis tabanlı yaklaşım.
+## 🚀 Kurulum ve Entegrasyon Kılavuzu
 
-Algoritma Analizi: Big O notasyonu çerçevesinde veri işleme optimizasyonu.
+CoreMetrics'i herhangi bir Vanilla JS, React, Vue veya svelte projesine saniyeler içinde entegre edebilirsiniz. Aşağıdaki adımları kendi web sayfanızda uygulamanız yeterlidir.
 
-Bulut Mimarileri: IaaS, PaaS ve SaaS platform modelleri.
+### 1. Sayfa Ziyaretlerini ve Tıklamaları İzleme
+Sitenizin ana JavaScript dosyasına (örneğin [app.js](cci:7://file:///c:/Users/XXX/Desktop/Projects/XXX/app.js:0:0-0:0)) aşağıdaki konfigürasyon ve fonksiyonu ekleyin:
 
-🔧 Kurulum
-appsettings.json içindeki PostgreSQL bağlantı dizesini düzenleyin.
+\`\`\`javascript
+const CORE_CONFIG = {
+    API_KEY: "SİZİN_GİZLİ_API_ANAHTARINIZ",
+    BASE_URL: "https://coremetrics-service.xxxxxx.run.app/api/Collector"
+};
 
-Update-Database komutunu çalıştırarak şemayı oluşturun.
+// Sayfa geçişlerini yakalama fonksiyonu
+async function trackCoreMetrics(path) {
+    try {
+        await fetch(CORE_CONFIG.BASE_URL + "/track", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                apiKey: CORE_CONFIG.API_KEY,
+                path: path,
+                referrer: document.referrer || "Doğrudan Giriş",
+                userAgent: navigator.userAgent
+            })
+        });
+    } catch (err) {
+        console.warn("CoreMetrics: Bağlantı hatası.");
+    }
+}
 
-Ngrok tünelini API portunuzda başlatın.
+// Projenizde sayfalar arası geçiş yaptığınız yerlerde çağırın:
+// Örnek: trackCoreMetrics('/#hakkimda');
+\`\`\`
+
+### 2. Oturum Süresini (Session Duration) İzleme
+Ziyaretçi sitenizden bağını tam olarak kopardığında (sekmeyi kapattığında) sitede geçirdiği net süreyi yakalamak için aşağıdaki kodu ekleyin. Bu kod, sayfa kapanırken bile çalışan `sendBeacon` sistemini kullanır.
+
+\`\`\`javascript
+const _sessionStart = Date.now();
+const _sessionPath = window.location.hash || "/";
+
+window.addEventListener("beforeunload", () => {
+    const duration = Math.round((Date.now() - _sessionStart) / 1000);
+    
+    // 2 saniyeden kısa süren önemsiz ziyaretleri (bot veya yanlış tıklama) yoksay
+    if (duration < 2) return; 
+
+    navigator.sendBeacon(
+        CORE_CONFIG.BASE_URL + "/session",
+        new Blob([JSON.stringify({
+            apiKey: CORE_CONFIG.API_KEY,
+            duration: duration,
+            path: _sessionPath
+        })], { type: "application/json" })
+    );
+});
+\`\`\`
+
+### 3. Dashboard Kurulumu
+1. Bu repodaki [dashboard.html](cci:7://file:///c:/Users/XXX/Desktop/Projects/XXX/dashboard.html:0:0-0:0) dosyasını kendi projenize kopyalayın.
+2. [dashboard.html](cci:7://file:///c:/Users/XXX/Desktop/Projects/XXX/dashboard.html:0:0-0:0) içerisindeki `CONFIG` objesine backend URL'inizi tanımlayın.
+   *(Güvenlik sebebiyle API Key'i kodun içine gömmeyin, sadece login ekranından girecek şekilde boş bırakın)*
+3. İlgili dosyayı Vercel, Netlify veya herhangi bir statik sunucuda yayınlayın.
+
+---
+
+## 🔒 Güvenlik Notu
+[dashboard.html](cci:7://file:///c:/Users/XXX/Desktop/Projects/XXX/dashboard.html:0:0-0:0) kaynak koduna asla API Key'inizi açık bir şekilde yazmayın. Bu projede, API Key tarayıcının `localStorage` (Yerel Depolama) hafızasında güvenle şifreli olarak tutulmakta ve sadece yetki verdiğiniz cihazlarda dashboarda erişim sağlanmaktadır.
+
+## 👨‍💻 Geliştirici
+**Süleyman Emre Arlı**  
+*[LinkedIn](www.linkedin.com/in/suleymanemrearlii) • [GitHub](https://github.com/AllenVB)*
