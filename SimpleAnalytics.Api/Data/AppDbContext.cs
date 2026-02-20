@@ -9,4 +9,6 @@ public class AppDbContext : DbContext
 
     public DbSet<Website> Websites { get; set; }
     public DbSet<Visit> Visits { get; set; }
+    public DbSet<Session> Sessions { get; set; } 
 }
+

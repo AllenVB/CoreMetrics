@@ -11,10 +11,11 @@
 using System;
 using System.Reflection;
 
+[assembly: Microsoft.Extensions.Configuration.UserSecrets.UserSecretsIdAttribute("ebd66fd4-29a6-4dcf-a118-550afd423c89")]
 [assembly: System.Reflection.AssemblyCompanyAttribute("SimpleAnalytics.Api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+5dbd56e784d5d3370b2c6a0fc245b369a225f5b8")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+be2560b3c6a06ca86746db1222571758dd65f0c6")]
 [assembly: System.Reflection.AssemblyProductAttribute("SimpleAnalytics.Api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SimpleAnalytics.Api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

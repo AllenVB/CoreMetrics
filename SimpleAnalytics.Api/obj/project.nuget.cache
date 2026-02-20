@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "9ggjf+VOXYI=",
+  "dgSpecHash": "gYBstiF05DA=",
   "success": true,
-  "projectFilePath": "C:\\Users\\suley\\Desktop\\SaaS\\SimpleAnalytics\\SimpleAnalytics.Api\\SimpleAnalytics.Api.csproj",
+  "projectFilePath": "C:\\Users\\suley\\Desktop\\Projects\\CoreMetrics\\SimpleAnalytics\\SimpleAnalytics.Api\\SimpleAnalytics.Api.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\suley\\.nuget\\packages\\humanizer.core\\2.14.1\\humanizer.core.2.14.1.nupkg.sha512",
     "C:\\Users\\suley\\.nuget\\packages\\microsoft.bcl.asyncinterfaces\\6.0.0\\microsoft.bcl.asyncinterfaces.6.0.0.nupkg.sha512",
@@ -29,6 +29,7 @@
     "C:\\Users\\suley\\.nuget\\packages\\microsoft.extensions.options\\8.0.2\\microsoft.extensions.options.8.0.2.nupkg.sha512",
     "C:\\Users\\suley\\.nuget\\packages\\microsoft.extensions.primitives\\8.0.0\\microsoft.extensions.primitives.8.0.0.nupkg.sha512",
     "C:\\Users\\suley\\.nuget\\packages\\microsoft.openapi\\1.6.14\\microsoft.openapi.1.6.14.nupkg.sha512",
+    "C:\\Users\\suley\\.nuget\\packages\\microsoft.visualstudio.azure.containers.tools.targets\\1.22.1\\microsoft.visualstudio.azure.containers.tools.targets.1.22.1.nupkg.sha512",
     "C:\\Users\\suley\\.nuget\\packages\\mono.texttemplating\\2.2.1\\mono.texttemplating.2.2.1.nupkg.sha512",
     "C:\\Users\\suley\\.nuget\\packages\\npgsql\\8.0.6\\npgsql.8.0.6.nupkg.sha512",
     "C:\\Users\\suley\\.nuget\\packages\\npgsql.entityframeworkcore.postgresql\\8.0.11\\npgsql.entityframeworkcore.postgresql.8.0.11.nupkg.sha512",

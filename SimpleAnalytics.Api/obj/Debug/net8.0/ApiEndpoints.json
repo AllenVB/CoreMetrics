@@ -27,6 +27,11 @@
         "Name": "apiKey",
         "Type": "System.String",
         "IsRequired": true
+      },
+      {
+        "Name": "days",
+        "Type": "System.Int32",
+        "IsRequired": false
       }
     ],
     "ReturnTypes": []

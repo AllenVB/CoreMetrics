@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\suley\\Desktop\\SaaS\\SimpleAnalytics\\SimpleAnalytics.Api\\SimpleAnalytics.Api.csproj": {}
+    "C:\\Users\\suley\\Desktop\\Projects\\CoreMetrics\\SimpleAnalytics\\SimpleAnalytics.Api\\SimpleAnalytics.Api.csproj": {}
   },
   "projects": {
-    "C:\\Users\\suley\\Desktop\\SaaS\\SimpleAnalytics\\SimpleAnalytics.Api\\SimpleAnalytics.Api.csproj": {
+    "C:\\Users\\suley\\Desktop\\Projects\\CoreMetrics\\SimpleAnalytics\\SimpleAnalytics.Api\\SimpleAnalytics.Api.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\suley\\Desktop\\SaaS\\SimpleAnalytics\\SimpleAnalytics.Api\\SimpleAnalytics.Api.csproj",
+        "projectUniqueName": "C:\\Users\\suley\\Desktop\\Projects\\CoreMetrics\\SimpleAnalytics\\SimpleAnalytics.Api\\SimpleAnalytics.Api.csproj",
         "projectName": "SimpleAnalytics.Api",
-        "projectPath": "C:\\Users\\suley\\Desktop\\SaaS\\SimpleAnalytics\\SimpleAnalytics.Api\\SimpleAnalytics.Api.csproj",
+        "projectPath": "C:\\Users\\suley\\Desktop\\Projects\\CoreMetrics\\SimpleAnalytics\\SimpleAnalytics.Api\\SimpleAnalytics.Api.csproj",
         "packagesPath": "C:\\Users\\suley\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\suley\\Desktop\\SaaS\\SimpleAnalytics\\SimpleAnalytics.Api\\obj\\",
+        "outputPath": "C:\\Users\\suley\\Desktop\\Projects\\CoreMetrics\\SimpleAnalytics\\SimpleAnalytics.Api\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -65,6 +65,10 @@
               "suppressParent": "All",
               "target": "Package",
               "version": "[8.0.12, )"
+            },
+            "Microsoft.VisualStudio.Azure.Containers.Tools.Targets": {
+              "target": "Package",
+              "version": "[1.22.1, )"
             },
             "Npgsql.EntityFrameworkCore.PostgreSQL": {
               "target": "Package",
